@@ -4,7 +4,7 @@ const { Router } = require("express");
 const routes = new Router();
 const querystring = require("querystring");
 
-const spotifyController = require('./app/controllers/spotify-controller')
+const spotifyController = require('./app/controllers/spotify.controller')
 
 
 routes.get('/authorization', spotifyController.getAuthorization);

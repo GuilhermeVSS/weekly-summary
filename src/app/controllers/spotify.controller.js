@@ -1,8 +1,9 @@
 require('dotenv').config();
-const spotify = require('../../services/spotify');
+const spotify = require('../../services/spotify.svr');
 const querystring = require("querystring");
 const axios = require('axios');
 const fs = require('fs');
+const twitterController = require('./twitter.controller');
 class SpotifyController {
 
     constructor() {
@@ -96,6 +97,7 @@ class SpotifyController {
     }
 
     createSummary = async (req, res, tracks) => {
+        const {limit} = req.query;
         try {
             let ids = tracks.map((track, key) => {
                 return key == tracks.length -1 ? `${track.track.id}`: `${track.track.id},`
@@ -116,6 +118,7 @@ class SpotifyController {
                 await this.verifyToken(req, res, error.message);
                 result = await spotify.get('/tracks', config);
             }
+            await twitterController.postSummary(limit, result.data.tracks);
             return { data: result.data };
         } catch (err) {
             throw err;
