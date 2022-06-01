@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const {twitter, twitterUpload} = require('../../services/twitter.svr');
+const {twitter} = require('../../services/twitter.svr');
 const trackLogic = require('../logic/track.logic');
 const headerHelper = require('../helpers/headerHelper');
 
@@ -56,16 +56,28 @@ class TwitterController {
 
     postSummary = async(limit, tracks, artists)=>{
         try{
-            console.log("Cheguei aqui");
             await trackLogic.initProcess(tracks, artists);
-            let id;
-            // id = await this.postHeadHours(limit, hours);
-            // id = await this.postTopArtists(id, artists);
-            // id = await this.postSongs(id, musics);
+            const artistId = await twitter.v1.uploadMedia('src/assets/top_artists.png');
+            const hoursId = await twitter.v1.uploadMedia('src/assets/hours_and_genres.png');
+            const musicsId = await twitter.v1.uploadMedia('src/assets/top_musics.png');
+            await twitter.v2.tweet(`Análise das minhas últimas ${limit} músicas - (Teste Api)`, {media:{media_ids:[hoursId,artistId, musicsId]}});
         }catch(err){
             console.log("ERRO AO PUBLICAR", err);
         }
         return;
+    }
+
+    postTweet = async(req, res)=>{
+        try{
+            const mediaId = await twitter.v1.uploadMedia('src/assets/background_image_blue.jpg');
+            console.log(mediaId);
+            console.log("na imagem");
+            await twitter.v2.tweet('nuss', {media:{media_ids:[mediaId]}});
+            return res.json({message: "sucesso"})
+        }catch(err){
+            console.log(err);
+        }
+        return res.json({message: "Fudeu"});
     }
 }
 

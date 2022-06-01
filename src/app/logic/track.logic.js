@@ -27,7 +27,7 @@ const getMusics = (mapMusicArtists) => {
 }
 
 const calculateTopArtists = (mapArtists) => {
-    try{
+    try {
         return Object.entries(mapArtists).map(([key, value]) => {
             return {
                 key,
@@ -38,45 +38,133 @@ const calculateTopArtists = (mapArtists) => {
         }).map((data, key) => {
             return `${key + 1}º - ${data.key}`
         }).join('\n');
-    } catch(e){
+    } catch (e) {
         console.log(e);
         return e;
     }
 }
 
-const processArtists = (artistsObject)=>{
+const processArtists = (artistsObject) => {
     try {
         // console.log(artistsObject);
 
-        const {mapArtists, artists} = artistsObject;
-        let artistsVector = Object.entries(mapArtists).map(([key, value])=>{
-                return {
-                    id: key, 
-                    timesListened: value
-                }
-            }).sort((a, b)=>{
-                return b.timesListened - a.timesListened;
-            });
-            console.log("artistsVector", artistsVector[0])
-            console.log("ARTISTA EXEMPLO", artists[0])
-        artistsVector = artistsVector.map((data, key)=>{
+        const { mapArtists, artists } = artistsObject;
+        let artistsVector = Object.entries(mapArtists).map(([key, value]) => {
+            return {
+                id: key,
+                timesListened: value
+            }
+        }).sort((a, b) => {
+            return b.timesListened - a.timesListened;
+        });
+
+        artistsVector = artistsVector.map((data, key) => {
             // console.log(data);
-            const foundArtist = artists.find(artist=>{
+            const foundArtist = artists.find(artist => {
                 return artist.id == data.id;
             })
-            return foundArtist; 
+            return foundArtist;
         });
+
+        const mapGenre = {}
+
         console.log("ORDENADO", artistsVector)
-        return artistsVector.slice(0,10); 
-    } catch(err) {
+        return artistsVector.slice(0, 5);
+    } catch (err) {
         console.log(err);
     }
 }
+
+const processMusics = (tracks) => {
+    const mapMusics = {}
+    let msListened = 0;
+    tracks.map(track=>{
+        msListened += track.duration_ms;
+        if(mapMusics[track.name]) mapMusics[track.name] += 1;
+        else mapMusics[track.name] = 1;
+    });
+
+    let musicsVector = Object.entries(mapMusics).map(([key, value]) => {
+        return {
+            id: key,
+            timesListened: value
+        }
+    }).sort((a, b) => {
+        return b.timesListened - a.timesListened;
+    });
+
+    console.log("Array Music Antes", musicsVector);
+    musicsVector = musicsVector.map((data, key) => {
+        const foundMusic = tracks.find(track => {
+            return track.name == data.id;
+        })
+        return foundMusic;
+    });
+
+    const hoursListened = calculateHours(msListened);
+    console.log("Array Music", musicsVector);
+
+    return {
+        musicsVector: musicsVector.slice(0,5),
+        hoursListened
+    };
+}
+
+const processGenre = (artistsObject) => {
+    try {
+        const { mapArtists, artists } = artistsObject;
+        const mapGenre = {};
+        let vectorOfGenres = [];
+        artists.map(data=>{
+            for(const genre of data.genres){
+                if(mapGenre[genre]){
+                    mapGenre[genre] += 1;
+                    continue;
+                }
+                mapGenre[genre] = 1;
+            }
+            vectorOfGenres = vectorOfGenres.concat(data.genres);
+        });
+
+        let genreVector = Object.entries(mapGenre).map(([key, value]) => {
+            return {
+                id: key,
+                timesListened: value
+            }
+        }).sort((a, b) => {
+            return b.timesListened - a.timesListened;
+        });
+
+        genreVector = genreVector.map((data, key) => {
+            const foundGenre = vectorOfGenres.find(genre => {
+                return genre == data.id;
+            })
+            return foundGenre;
+        });
+
+        return genreVector.slice(0,5);
+
+    } catch (err) {
+        console.log("Genre", err);
+    }
+}
 const initProcess = async (tracks, artists) => {
-    console.log("Iniciando processo")
-    const dataArtists = processArtists(artists);
-    console.log("Artistas Coletados")
+    const [dataArtists, dataGenres, musicsObject] = await Promise.all([
+        processArtists(artists),
+        processGenre(artists),
+        processMusics(tracks),
+    ]);
+
+    console.log("Cheguei aqui");
+
+    await Promise.all([
+        imageBuilder.buildImageTopArtist(dataArtists),
+        imageBuilder.buildImageHoursAndGenres(dataGenres, musicsObject.hoursListened),
+        imageBuilder.buildImageMusics(musicsObject.musicsVector)
+    ]);
+
     await imageBuilder.buildImageTopArtist(dataArtists);
+
     // const {msListened, mapArtist, mapMusicArtists} = processTracks(tracks);
     // const hoursListened = calculateHours(msListened);
     // const musics = getMusics(mapMusicArtists);
@@ -88,53 +176,53 @@ const initProcess = async (tracks, artists) => {
     }
 }
 
-const processTracks = (tracks) => {
-    let msListened = 0;
-    const mapArtist = {};
-    const mapMusicArtists = {}
+// const processTracks = (tracks) => {
+//     let msListened = 0;
+//     const mapArtist = {};
+//     const mapMusicArtists = {}
 
-    for (const track of tracks) {
-        msListened += track.duration_ms;
-        for (const artist of track.artists) {
-            mapArtist[artist.name] = mapArtist[artist.name] ? mapArtist[artist.name] + 1 : 1;
-            if (mapMusicArtists[track.name]) {
-                mapMusicArtists[track.name].push(artist.name);
-            } else {
-                mapMusicArtists[track.name] = [artist.name];
-            };
-        }
-    }
+//     for (const track of tracks) {
+//         msListened += track.duration_ms;
+//         for (const artist of track.artists) {
+//             mapArtist[artist.name] = mapArtist[artist.name] ? mapArtist[artist.name] + 1 : 1;
+//             if (mapMusicArtists[track.name]) {
+//                 mapMusicArtists[track.name].push(artist.name);
+//             } else {
+//                 mapMusicArtists[track.name] = [artist.name];
+//             };
+//         }
+//     }
 
-    return {
-        msListened,
-        mapMusicArtists,
-        mapArtist
-    };
-};
+//     return {
+//         msListened,
+//         mapMusicArtists,
+//         mapArtist
+//     };
+// };
 
-const processTracksForImages = (tracks) => {
-    let msListened = 0;
-    const mapArtist = {};
-    const mapMusicArtists = {}
+// const processTracksForImages = (tracks) => {
+//     let msListened = 0;
+//     const mapArtist = {};
+//     const mapMusicArtists = {}
 
-    for (const track of tracks) {
-        msListened += track.duration_ms;
-        for (const artist of track.artists) {
-            mapArtist[artist.name] = mapArtist[artist.name] ? mapArtist[artist.name] + 1 : 1;
-            if (mapMusicArtists[track.name]) {
-                mapMusicArtists[track.name].push(artist.name);
-            } else {
-                mapMusicArtists[track.name] = [artist.name];
-            };
-        }
-    }
+//     for (const track of tracks) {
+//         msListened += track.duration_ms;
+//         for (const artist of track.artists) {
+//             mapArtist[artist.name] = mapArtist[artist.name] ? mapArtist[artist.name] + 1 : 1;
+//             if (mapMusicArtists[track.name]) {
+//                 mapMusicArtists[track.name].push(artist.name);
+//             } else {
+//                 mapMusicArtists[track.name] = [artist.name];
+//             };
+//         }
+//     }
 
-    return {
-        msListened,
-        mapMusicArtists,
-        mapArtist
-    };
-};
+//     return {
+//         msListened,
+//         mapMusicArtists,
+//         mapArtist
+//     };
+// };
 
 module.exports = {
     initProcess
