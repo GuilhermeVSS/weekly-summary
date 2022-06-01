@@ -1,14 +1,25 @@
-const twitter = require('../../services/twitter.svr');
+require('dotenv').config();
+
+const {twitter, twitterUpload} = require('../../services/twitter.svr');
 const trackLogic = require('../logic/track.logic');
+const headerHelper = require('../helpers/headerHelper');
 
 const moment = require('moment');
 
 class TwitterController {
 
+    constructor (){
+        this.tweetUrl = process.env.TWITTER_URL
+        this.uploadUrl = process.env.TWITTER_UPLOAD_URL
+    }
+
     postHeadHours = async(limit, hours) =>{
+        const config = {
+            headers: headerHelper.getAuthorization(`${this.tweetUrl}/tweets`)
+        }
         const headTweet = await twitter.post(`/tweets`, {
             "text": `Summary of the last ${limit} songs - ${moment().format('dd.mm.yyyy')}\nTotal Time: ${hours}`
-        });
+        }, config);
         return headTweet.data.data.id
     }
 
@@ -43,13 +54,14 @@ class TwitterController {
         return topArtistTweet.data.data.id
     }
 
-    postSummary = async(limit, tracks)=>{
+    postSummary = async(limit, tracks, artists)=>{
         try{
-            const {hours, musics, artists} = await trackLogic.processTracks(tracks);
+            console.log("Cheguei aqui");
+            await trackLogic.initProcess(tracks, artists);
             let id;
-            id = await this.postHeadHours(limit, hours);
-            id = await this.postTopArtists(id, artists);
-            id = await this.postSongs(id, musics);
+            // id = await this.postHeadHours(limit, hours);
+            // id = await this.postTopArtists(id, artists);
+            // id = await this.postSongs(id, musics);
         }catch(err){
             console.log("ERRO AO PUBLICAR", err);
         }

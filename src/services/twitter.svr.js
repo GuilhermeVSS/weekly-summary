@@ -34,7 +34,13 @@ const authHeader = oauth.toHeader(authorization);
 
 const twitter = axios.create({
     baseURL: process.env.TWITTER_URL,
-    headers: authHeader
 });
 
-module.exports = twitter;
+const twitterUpload = axios.create({
+    baseURL: process.env.TWITTER_UPLOAD_URL
+})
+
+module.exports = {
+    twitter,
+    twitterUpload   
+};

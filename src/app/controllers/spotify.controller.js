@@ -53,8 +53,6 @@ class SpotifyController {
     }
 
     refreshToken = async (req, res) => {
-        console.log("Chamei o refresh");
-        // console.log("Deveria entrar aqui");
         try {
             const [, baseUrl] = req.rawHeaders;
             const { data: result } = await axios.post("https://accounts.spotify.com/api/token", querystring.stringify({
@@ -67,7 +65,6 @@ class SpotifyController {
             this._refreshToken = result.refresh_token;
             return;
         } catch (err) {
-            console.log('Erro no refresh', err);
             return res.json({ error: err });
         }
     }
@@ -85,10 +82,8 @@ class SpotifyController {
     }
 
     verifyToken = async (req, res, error) => {
-        console.log("Entrei para verificar", error);
         try {
             if (error == "The access token expired") {
-                console.log("Token Expired");
                 await this.refreshToken(req, res);
             }
         } catch (err) {
@@ -96,12 +91,50 @@ class SpotifyController {
         }
     }
 
+    getArtists = async (req, res, tracks) => {
+        const artists = [];
+        const mapArtists = {};
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${this._accessToken}`
+            }
+        }
+
+        try {
+            for (const track of tracks) {
+                let artist;
+                if(mapArtists[track.artists[0].id]) {
+                    mapArtists[track.artists[0].id] += 1;
+                    continue;
+                }
+                try {
+                    artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
+                } catch (err) {
+                    const { response: { data: { error: error } } } = err;
+                    await this.verifyToken(req, res, error.message);
+                    artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
+                }
+                mapArtists[track.artists[0].id] = 1;
+                artists.push(artist.data);
+            }
+        } catch (err) {
+            console.log(err);
+        }
+
+        return {
+            mapArtists,
+            artists
+        };
+    }
+
     createSummary = async (req, res, tracks) => {
-        const {limit} = req.query;
+        const { limit } = req.query;
         try {
             let ids = tracks.map((track, key) => {
-                return key == tracks.length -1 ? `${track.track.id}`: `${track.track.id},`
+                return key == tracks.length - 1 ? `${track.track.id}` : `${track.track.id},`
             }).join('');
+
             const config = {
                 headers: {
                     "Authorization": `Bearer ${this._accessToken}`
@@ -110,7 +143,9 @@ class SpotifyController {
                     ids: ids
                 }
             }
+
             let result;
+
             try {
                 result = await spotify.get('/tracks', config);
             } catch (err) {
@@ -118,7 +153,12 @@ class SpotifyController {
                 await this.verifyToken(req, res, error.message);
                 result = await spotify.get('/tracks', config);
             }
-            await twitterController.postSummary(limit, result.data.tracks);
+            
+            const musics = result.data.tracks;
+            const artists = await this.getArtists(req, res, musics);
+            
+            await twitterController.postSummary(limit, musics, artists);
+
             return { data: result.data };
         } catch (err) {
             throw err;
