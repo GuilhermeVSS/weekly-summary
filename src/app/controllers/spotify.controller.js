@@ -4,6 +4,10 @@ const querystring = require("querystring");
 const axios = require('axios');
 const fs = require('fs');
 const twitterController = require('./twitter.controller');
+const { Day } = require('../models/day.model');
+const { Cursor } = require('../models/cursor.model');
+
+const trackLogic = require('../logic/track.logic');
 class SpotifyController {
 
     constructor() {
@@ -52,20 +56,20 @@ class SpotifyController {
         }
     }
 
-    refreshToken = async (req, res) => {
+    refreshToken = async () => {
         try {
-            const [, baseUrl] = req.rawHeaders;
             const { data: result } = await axios.post("https://accounts.spotify.com/api/token", querystring.stringify({
                 "grant_type": "refresh_token",
                 "client_id": process.env.SPOTIFY_CLIENT_ID,
                 "client_secret": process.env.SPOTIFY_CLIENT_SECRET,
                 "refresh_token": this._refreshToken
             }))
+            // console.log(result);
             this._accessToken = result.access_token;
-            this._refreshToken = result.refresh_token;
             return;
         } catch (err) {
-            return res.json({ error: err });
+            console.log("Erro linha 71", err);
+            throw new Error(err)
         }
     }
 
@@ -81,17 +85,19 @@ class SpotifyController {
         }
     }
 
-    verifyToken = async (req, res, error) => {
+    verifyToken = async (error) => {
         try {
+            console.log("Verify Token");
             if (error == "The access token expired") {
-                await this.refreshToken(req, res);
+                console.log("Chamando refresh Token");
+                await this.refreshToken();
             }
         } catch (err) {
             throw new Error(err);
         }
     }
 
-    getArtists = async (req, res, tracks) => {
+    getArtists = async (tracks) => {
         const artists = [];
         const mapArtists = {};
 
@@ -102,19 +108,14 @@ class SpotifyController {
         }
 
         try {
+            await this.refreshToken();
             for (const track of tracks) {
-                let artist;
-                if(mapArtists[track.artists[0].id]) {
+                if (mapArtists[track.artists[0].id]) {
                     mapArtists[track.artists[0].id] += 1;
                     continue;
                 }
-                try {
-                    artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
-                } catch (err) {
-                    const { response: { data: { error: error } } } = err;
-                    await this.verifyToken(req, res, error.message);
-                    artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
-                }
+                const artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
+
                 mapArtists[track.artists[0].id] = 1;
                 artists.push(artist.data);
             }
@@ -153,10 +154,10 @@ class SpotifyController {
                 await this.verifyToken(req, res, error.message);
                 result = await spotify.get('/tracks', config);
             }
-            
+
             const musics = result.data.tracks;
             const artists = await this.getArtists(req, res, musics);
-            
+
             await twitterController.postSummary(limit, musics, artists);
 
             return { data: result.data };
@@ -186,12 +187,95 @@ class SpotifyController {
                 result = await spotify.get('/me/player/recently-played', config);
             }
 
-            const tracks = await this.createSummary(req, res, result.data.items);
+            //this.createSummary(req, res, result.data.items);
 
-            return res.json({ data: tracks });
+            return res.json({ message: "your songs are being processed" });
 
         } catch (err) {
             return res.status(500).json({ error: err.message });
+        }
+    }
+
+    getMusicData = async (tracks) => {
+        try {
+
+            await this.refreshToken();
+
+            let ids = tracks.map((track, key) => {
+                return key == tracks.length - 1 ? `${track.track.id}` : `${track.track.id},`
+            }).join('');
+
+            const config = {
+                headers: {
+                    "Authorization": `Bearer ${this._accessToken}`
+                },
+                params: {
+                    ids: ids
+                }
+            }
+
+            const result = await spotify.get('/tracks', config);
+
+            const musics = result.data.tracks;
+
+            return musics;
+
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
+    getLastSongs = async () => {
+        const limit = 50;
+        try {
+
+            await this.refreshToken();
+
+            const [foundCursor] = await Cursor.find();
+
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${this._accessToken}`
+                },
+                params: {
+                    limit: limit,
+                    after: foundCursor ? foundCursor.after : null,
+                }
+            }
+
+            const result = await spotify.get('/me/player/recently-played', config);
+
+            const afterCursor = result.data.cursors? result.data.cursors.after: null;
+
+            if (!foundCursor) {
+                const newCursor = new Cursor({ after: afterCursor });
+                await newCursor.save();
+            }
+            else if (afterCursor) {
+                await foundCursor.update({ $set: { after: afterCursor } });
+            }
+
+            const tracks = result.data.items;
+            return tracks;
+        } catch (err) {
+            console.log("Error linha 272", err);
+            throw new Error(err);
+        }
+    }
+
+    initProcess = async () => {
+        try {
+            const tracksData = await this.getLastSongs();
+            console.log("Tracks");
+            const musicsData = await this.getMusicData(tracksData);
+            console.log("Songs");
+            const artistsData = await this.getArtists(musicsData);
+            console.log("Artists");
+            const { artists, songs, timeListened } = await trackLogic.initProcess(musicsData, artistsData);
+            const newDaySummary = new Day({ artists, songs, timeListened });
+            await newDaySummary.save();
+        } catch (err) {
+            throw new Error(err);
         }
     }
 }

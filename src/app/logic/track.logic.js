@@ -46,30 +46,33 @@ const calculateTopArtists = (mapArtists) => {
 
 const processArtists = (artistsObject) => {
     try {
-        // console.log(artistsObject);
-
         const { mapArtists, artists } = artistsObject;
-        let artistsVector = Object.entries(mapArtists).map(([key, value]) => {
+        const artistsVector = artists.map(data=>{
             return {
-                id: key,
-                timesListened: value
+                genres: data.genres,
+                id: data.id,
+                images: data.images,
+                name: data.name
             }
-        }).sort((a, b) => {
-            return b.timesListened - a.timesListened;
-        });
+        })
+        // let artistsVector = Object.entries(mapArtists).map(([key, value]) => {
+        //     return {
+        //         id: key,
+        //         timesListened: value
+        //     }
+        // }).sort((a, b) => {
+        //     return b.timesListened - a.timesListened;
+        // });
 
-        artistsVector = artistsVector.map((data, key) => {
-            // console.log(data);
-            const foundArtist = artists.find(artist => {
-                return artist.id == data.id;
-            })
-            return foundArtist;
-        });
+        // artistsVector = artistsVector.map((data, key) => {
+        //     const foundArtist = artists.find(artist => {
+        //         return artist.id == data.id;
+        //     })
+        //     return foundArtist;
+        // });
+        // console.log("VETOR DE ARTISTAS TAMANHO", artistsVector.length);
+        return artistsVector;
 
-        const mapGenre = {}
-
-        console.log("ORDENADO", artistsVector)
-        return artistsVector.slice(0, 5);
     } catch (err) {
         console.log(err);
     }
@@ -78,35 +81,44 @@ const processArtists = (artistsObject) => {
 const processMusics = (tracks) => {
     const mapMusics = {}
     let msListened = 0;
+
     tracks.map(track=>{
         msListened += track.duration_ms;
         if(mapMusics[track.name]) mapMusics[track.name] += 1;
         else mapMusics[track.name] = 1;
     });
 
-    let musicsVector = Object.entries(mapMusics).map(([key, value]) => {
+    let songs = tracks.map(data=>{
         return {
-            id: key,
-            timesListened: value
+            album: data.album,
+            artists: data.artists,
+            duration_ms: data.duration_ms,
+            name: data.name,
+            id: data.id
         }
-    }).sort((a, b) => {
-        return b.timesListened - a.timesListened;
     });
 
-    console.log("Array Music Antes", musicsVector);
-    musicsVector = musicsVector.map((data, key) => {
-        const foundMusic = tracks.find(track => {
-            return track.name == data.id;
-        })
-        return foundMusic;
-    });
+    // let musicsVector = Object.entries(mapMusics).map(([key, value]) => {
+    //     return {
+    //         id: key,
+    //         timesListened: value
+    //     }
+    // }).sort((a, b) => {
+    //     return b.timesListened - a.timesListened;
+    // });
 
-    const hoursListened = calculateHours(msListened);
-    console.log("Array Music", musicsVector);
+    // musicsVector = musicsVector.map((data, key) => {
+    //     const foundMusic = tracks.find(track => {
+    //         return track.name == data.id;
+    //     })
+    //     return foundMusic;
+    // });
 
+    // const hoursListened = calculateHours(msListened);
+    // console.log("Tamanho vector Musica", tracks);
     return {
-        musicsVector: musicsVector.slice(0,5),
-        hoursListened
+        musicsVector: songs,
+        hoursListened: msListened
     };
 }
 
@@ -155,7 +167,11 @@ const initProcess = async (tracks, artists) => {
         processMusics(tracks),
     ]);
 
-    console.log("Cheguei aqui");
+    return {
+        artists: dataArtists,
+        songs: musicsObject.musicsVector,
+        timeListened: musicsObject.hoursListened
+    }
 
     await Promise.all([
         imageBuilder.buildImageTopArtist(dataArtists),
@@ -163,17 +179,7 @@ const initProcess = async (tracks, artists) => {
         imageBuilder.buildImageMusics(musicsObject.musicsVector)
     ]);
 
-    await imageBuilder.buildImageTopArtist(dataArtists);
-
-    // const {msListened, mapArtist, mapMusicArtists} = processTracks(tracks);
-    // const hoursListened = calculateHours(msListened);
-    // const musics = getMusics(mapMusicArtists);
-    // const topArtists = calculateTopArtists(mapArtist);
-    return {
-        // hours: hoursListened,
-        // musics: musics,
-        // artists: topArtists,
-    }
+    return;
 }
 
 // const processTracks = (tracks) => {

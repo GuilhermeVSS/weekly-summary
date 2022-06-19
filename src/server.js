@@ -1,6 +1,7 @@
 require('dotenv').config();
 const app = require('./app');
 
+require('./services/cron.svr')();
 
 const PORT = process.env.PORT || 3333;
 
