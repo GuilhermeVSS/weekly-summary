@@ -4,6 +4,7 @@ const { Router } = require("express");
 const routes = new Router();
 
 const spotifyController = require('./app/controllers/spotify.controller');
+const summaryController = require('./app/controllers/summary.controller');
 
 routes.get('/authorization', spotifyController.getAuthorization);
 
@@ -14,6 +15,10 @@ routes.get('/', async(req,res)=>{
 })
 
 routes.get('/confirmation', spotifyController.confirmation);
+
+routes.post('/build', summaryController.buildSummary);
+
+routes.post('/get-info', spotifyController.initProcess);
 
 
 module.exports = routes;

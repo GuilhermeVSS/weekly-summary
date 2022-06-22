@@ -1,5 +1,6 @@
 require('dotenv').config();
 const app = require('./app');
+const PORT = process.env.PORT || 3333;
 
 const {
     buildWeekSummary,
@@ -9,7 +10,6 @@ const {
 buildWeekSummary();
 getSpotifyInfo();
 
-const PORT = process.env.PORT || 3333;
 
 
 app.listen(PORT, ()=>{

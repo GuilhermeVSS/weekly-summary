@@ -8,7 +8,7 @@ const fs = require(`fs`);
 const path = require('path');
 
 class SummaryController {
-    buildSummary = async()=>{
+    buildSummary = async(req, res)=>{
         try{
             const begin = moment().subtract(7,'d').format('DD-MM-YYYY');
             const end = moment().format('DD-MM-YYYY');
@@ -18,20 +18,26 @@ class SummaryController {
                 Day.aggregate(aggregateHelper.getMostGenresListened(begin, end)),
                 Day.aggregate(aggregateHelper.getMostSongsListened(begin, end))
             ])
+
             const imageId = Date.now();
+            
             await Promise.all([
                 await imageBuilder.buildImageTopArtist(imageId, mostArtistsListened),
                 await imageBuilder.buildImageHoursAndGenres(imageId, mostGenresListened, timeListened),
                 await imageBuilder.buildImageMusics(imageId, mostSongsListened)
             ]);
+
             await twitter.postSummary(imageId);
+
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`));
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`));
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-artists.png`));
+
+            return res? res.json({message: "Successful"}): {};
         }catch(err){
             console.log(err);
         }
-        return;
+        return res? res.json({message: "Failed"}): {};
     }
 }
 

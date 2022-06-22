@@ -3,9 +3,9 @@ const timeHelper = require('../helpers/time.helper');
 const path = require('path');
 class ImageBuilder {
     constructor() {
-        this.backGroundImage = path.resolve(__dirname,'..', '..', 'assets', 'background_image_blue.jpg');
-        this.mask = path.resolve(__dirname,'..', '..', 'assets', 'mascara.png');
-        this.defaultProfile = path.resolve(__dirname,'..', '..', 'assets', 'black_image_profile.jpg');
+        this.backGroundImage = path.resolve(__dirname, '..', '..', 'assets', 'background_image_blue.jpg');
+        this.mask = path.resolve(__dirname, '..', '..', 'assets', 'mascara.png');
+        this.defaultProfile = path.resolve(__dirname, '..', '..', 'assets', 'black_image_profile.jpg');
     }
 
     buildImageMusics = async (imageId, tracks) => {
@@ -46,9 +46,9 @@ class ImageBuilder {
         let begins = 380;
         let lastLength = 10;
         listMusics.map((track, key) => {
-            if(lastLength >= 20){
+            if (lastLength >= 20) {
                 begins += 80
-            }else{
+            } else {
                 begins += 50;
             }
             backGround.print(font, 20, begins, {
@@ -62,14 +62,14 @@ class ImageBuilder {
             lastLength = track._id.length
         });
 
-        await backGround.writeAsync(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-top-musics.png`));
+        await backGround.writeAsync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`));
     }
 
     buildImageHoursAndGenres = async (imageId, genres, msListened) => {
 
         let font = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
         const backGround = await jimp.read(this.backGroundImage);
-        const hoursListened  = timeHelper(msListened.sum);
+        const hoursListened = timeHelper(msListened.sum);
 
         backGround.resize(400, 844);
         backGround.color([
@@ -104,10 +104,10 @@ class ImageBuilder {
         let lastLength = 10;
         let yPix = 400;
         genres.map((genre, key) => {
-            if(lastLength >= 20){
+            if (lastLength >= 20) {
                 yPix += 70;
             }
-            else{
+            else {
                 yPix += 50;
             }
 
@@ -121,7 +121,7 @@ class ImageBuilder {
             lastLength = genre._id.length;
         });
 
-       await backGround.writeAsync(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`));
+        await backGround.writeAsync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`));
     }
 
     buildImageTopArtist = async (imageId, artists) => {
@@ -132,8 +132,9 @@ class ImageBuilder {
         let fontList = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
         let mask = await jimp.read(this.mask);
         const backGround = await jimp.read(this.backGroundImage);
-        const profilePath = topArtist.images[topArtist.images.length - 1] && topArtist.images[topArtist.images.length - 1].url? topArtist.images[topArtist.images.length - 1].url : 'src/assets/black_image_profile.jpg'  
-        
+        const images = (topArtist.images[0]);
+        const profilePath = images[images.length - 1] && images[images.length - 1].url ? images[images.length - 1].url : 'src/assets/black_image_profile.jpg'
+
         jimp.read(profilePath).then(img => {
             img.resize(130, 130);
             mask.resize(130, 130);
@@ -153,21 +154,21 @@ class ImageBuilder {
             let yPix = 400;
             let lastLength = 10;
             listOfArtists.map((artist, key) => {
-                if(lastLength >= 20){
+                if (lastLength >= 20) {
                     yPix += 80;
-                }else {
+                } else {
                     yPix += 50;
                 }
                 backGround.print(fontList, 20, yPix, {
                     "text": `${key + 2}º - ${artist._id}`,
                     alignmentX: jimp.HORIZONTAL_ALIGN_LEFT
                 },
-                400,
-                844
+                    400,
+                    844
                 );
                 lastLength = artist._id.length;
             })
-            backGround.composite(img, 131, 240).write(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-top-artists.png`));
+            backGround.composite(img, 135, 260).write(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-artists.png`));
         }).catch(erro => {
             console.log("erro:", erro);
         })
