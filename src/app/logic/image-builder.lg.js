@@ -1,16 +1,19 @@
 const jimp = require('jimp');
-
+const timeHelper = require('../helpers/time.helper');
+const path = require('path');
 class ImageBuilder {
+    constructor() {
+        this.backGroundImage = path.resolve(__dirname,'..', '..', 'assets', 'background_image_blue.jpg');
+        this.mask = path.resolve(__dirname,'..', '..', 'assets', 'mascara.png');
+        this.defaultProfile = path.resolve(__dirname,'..', '..', 'assets', 'black_image_profile.jpg');
+    }
 
-    buildImageMusics = async (tracks) => {
-
+    buildImageMusics = async (imageId, tracks) => {
         let font = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
-        let fontList = await jimp.loadFont(jimp.FONT_SANS_16_WHITE);
-        let mask = await jimp.read('src/assets/mascara.png');
         const topMusic = tracks[0];
         const listMusics = tracks.slice(1, 5);
 
-        const backGround = await jimp.read('src/assets/background_image_blue.jpg');
+        const backGround = await jimp.read(this.backGroundImage);
         backGround.resize(400, 844);
         backGround.color([
             { apply: 'brighten', params: [-25] },
@@ -24,7 +27,7 @@ class ImageBuilder {
             844
         );
         backGround.print(font, 0, -140, {
-            "text": `${topMusic.name}`,
+            "text": `${topMusic._id}`,
             alignmentX: jimp.HORIZONTAL_ALIGN_CENTER,
             alignmentY: jimp.VERTICAL_ALIGN_MIDDLE
         },
@@ -49,25 +52,25 @@ class ImageBuilder {
                 begins += 50;
             }
             backGround.print(font, 20, begins, {
-                "text": `${key + 2}º - ${track.name}`,
+                "text": `${key + 2}º - ${track._id}`,
                 alignmentX: jimp.HORIZONTAL_ALIGN_LEFT,
             },
                 400,
                 844
             );
 
-            lastLength = track.name.length
+            lastLength = track._id.length
         });
 
-        backGround.write('src/assets/top_musics.png');
+        await backGround.writeAsync(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-top-musics.png`));
     }
 
-    buildImageHoursAndGenres = async (genres, hoursListened) => {
+    buildImageHoursAndGenres = async (imageId, genres, msListened) => {
 
         let font = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
-        let fontList = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
-        let mask = await jimp.read('src/assets/mascara.png');
-        const backGround = await jimp.read('src/assets/background_image_blue.jpg');
+        const backGround = await jimp.read(this.backGroundImage);
+        const hoursListened  = timeHelper(msListened.sum);
+
         backGround.resize(400, 844);
         backGround.color([
             { apply: 'brighten', params: [-25] },
@@ -109,25 +112,26 @@ class ImageBuilder {
             }
 
             backGround.print(font, 20, yPix, {
-                "text": `${key + 1}º - ${genre}`,
+                "text": `${key + 1}º - ${genre._id}`,
                 alignmentX: jimp.HORIZONTAL_ALIGN_LEFT
             },
                 400,
                 844
             );
-            lastLength = genre.length;
+            lastLength = genre._id.length;
         });
 
-        backGround.write('src/assets/hours_and_genres.png');
+       await backGround.writeAsync(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`));
     }
 
-    buildImageTopArtist = async (artists) => {
+    buildImageTopArtist = async (imageId, artists) => {
         const topArtist = artists[0];
         const listOfArtists = artists.slice(1, 5);
+
         let font = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
         let fontList = await jimp.loadFont(jimp.FONT_SANS_32_WHITE);
-        let mask = await jimp.read('src/assets/mascara.png');
-        const backGround = await jimp.read('src/assets/background_image_blue.jpg');
+        let mask = await jimp.read(this.mask);
+        const backGround = await jimp.read(this.backGroundImage);
         const profilePath = topArtist.images[topArtist.images.length - 1] && topArtist.images[topArtist.images.length - 1].url? topArtist.images[topArtist.images.length - 1].url : 'src/assets/black_image_profile.jpg'  
         
         jimp.read(profilePath).then(img => {
@@ -140,7 +144,7 @@ class ImageBuilder {
             ])
             backGround.opacity(1);
             backGround.print(font, 0, -200, {
-                "text": `1º - ${topArtist.name}`,
+                "text": `1º - ${topArtist._id}`,
                 alignmentX: jimp.HORIZONTAL_ALIGN_CENTER,
                 alignmentY: jimp.VERTICAL_ALIGN_MIDDLE
             },
@@ -155,15 +159,15 @@ class ImageBuilder {
                     yPix += 50;
                 }
                 backGround.print(fontList, 20, yPix, {
-                    "text": `${key + 2}º - ${artist.name}`,
+                    "text": `${key + 2}º - ${artist._id}`,
                     alignmentX: jimp.HORIZONTAL_ALIGN_LEFT
                 },
                 400,
                 844
                 );
-                lastLength = artist.name.length;
+                lastLength = artist._id.length;
             })
-            backGround.composite(img, 131, 240).write('src/assets/top_artists.png');
+            backGround.composite(img, 131, 240).write(path.resolve(__dirname,'..', '..', '..', 'tmp', `${imageId}-top-artists.png`));
         }).catch(erro => {
             console.log("erro:", erro);
         })

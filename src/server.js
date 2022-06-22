@@ -1,7 +1,13 @@
 require('dotenv').config();
 const app = require('./app');
 
-require('./services/cron.svr')();
+const {
+    buildWeekSummary,
+    getSpotifyInfo,
+} = require('./services/cron.svr');
+
+buildWeekSummary();
+getSpotifyInfo();
 
 const PORT = process.env.PORT || 3333;
 

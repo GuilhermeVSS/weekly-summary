@@ -1,8 +1,21 @@
 const spotifyController = require('../app/controllers/spotify.controller');
+const summaryController = require('../app/controllers/summary.controller');
 const cron = require('node-cron');
 
+const buildWeekSummary= () => {
+    cron.schedule('59 23 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+        try {
+            await summaryController.buildSummary();
+        } catch(e) {
+            console.log(err);
+        }
+    }, {
+        scheduled: true,
+        timezone: "America/Sao_Paulo"
+    })
+}
 
-module.exports = () => {
+const getSpotifyInfo = () => {
     cron.schedule('0 59 23 * * *', async () => {
         try {
             await spotifyController.initProcess();
@@ -13,4 +26,9 @@ module.exports = () => {
         scheduled: true,
         timezone: "America/Sao_Paulo"
     })
+}
+
+module.exports = {
+    buildWeekSummary,
+    getSpotifyInfo,
 }

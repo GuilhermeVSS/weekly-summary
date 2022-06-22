@@ -50,8 +50,6 @@ class SpotifyController {
 
             return res.send("Token has beenn saved succesfully");
         } catch (err) {
-
-            console.log(err);
             return res.json({ error: err });
         }
     }
@@ -64,7 +62,6 @@ class SpotifyController {
                 "client_secret": process.env.SPOTIFY_CLIENT_SECRET,
                 "refresh_token": this._refreshToken
             }))
-            // console.log(result);
             this._accessToken = result.access_token;
             return;
         } catch (err) {
@@ -89,7 +86,6 @@ class SpotifyController {
         try {
             console.log("Verify Token");
             if (error == "The access token expired") {
-                console.log("Chamando refresh Token");
                 await this.refreshToken();
             }
         } catch (err) {
@@ -129,74 +125,7 @@ class SpotifyController {
         };
     }
 
-    createSummary = async (req, res, tracks) => {
-        const { limit } = req.query;
-        try {
-            let ids = tracks.map((track, key) => {
-                return key == tracks.length - 1 ? `${track.track.id}` : `${track.track.id},`
-            }).join('');
-
-            const config = {
-                headers: {
-                    "Authorization": `Bearer ${this._accessToken}`
-                },
-                params: {
-                    ids: ids
-                }
-            }
-
-            let result;
-
-            try {
-                result = await spotify.get('/tracks', config);
-            } catch (err) {
-                const { response: { data: { error: error } } } = err;
-                await this.verifyToken(req, res, error.message);
-                result = await spotify.get('/tracks', config);
-            }
-
-            const musics = result.data.tracks;
-            const artists = await this.getArtists(req, res, musics);
-
-            await twitterController.postSummary(limit, musics, artists);
-
-            return { data: result.data };
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    recentlyPlayed = async (req, res) => {
-        const { limit } = req.query;
-        try {
-            let result;
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${this._accessToken}`
-                },
-                params: {
-                    limit: limit
-                }
-            }
-
-            try {
-                result = await spotify.get('/me/player/recently-played', config);
-            } catch (err) {
-                const { response: { data: { error: error } } } = err;
-                await this.verifyToken(req, res, error.message);
-                result = await spotify.get('/me/player/recently-played', config);
-            }
-
-            //this.createSummary(req, res, result.data.items);
-
-            return res.json({ message: "your songs are being processed" });
-
-        } catch (err) {
-            return res.status(500).json({ error: err.message });
-        }
-    }
-
-    getMusicData = async (tracks) => {
+    getSongsData = async (tracks) => {
         try {
 
             await this.refreshToken();
@@ -258,7 +187,6 @@ class SpotifyController {
             const tracks = result.data.items;
             return tracks;
         } catch (err) {
-            console.log("Error linha 272", err);
             throw new Error(err);
         }
     }
@@ -266,12 +194,9 @@ class SpotifyController {
     initProcess = async () => {
         try {
             const tracksData = await this.getLastSongs();
-            console.log("Tracks");
-            const musicsData = await this.getMusicData(tracksData);
-            console.log("Songs");
-            const artistsData = await this.getArtists(musicsData);
-            console.log("Artists");
-            const { artists, songs, timeListened } = await trackLogic.initProcess(musicsData, artistsData);
+            const songsData = await this.getSongsData(tracksData);
+            const artistsData = await this.getArtists(songsData);
+            const { artists, songs, timeListened } = await trackLogic.initProcess(songsData, artistsData);
             const newDaySummary = new Day({ artists, songs, timeListened });
             await newDaySummary.save();
         } catch (err) {
