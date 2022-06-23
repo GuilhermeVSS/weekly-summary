@@ -14,17 +14,12 @@ class TwitterController {
     }
 
     postSummary = async (imageId) => {
-        try {
-            const [artistId, hoursId, musicsId] = await Promise.all([
-                await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-artists.png`)),
-                await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`)),
-                await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`))
-            ]);
-            await twitter.v2.tweet(`Summary of last week's songs - ${moment().format('DD/MM/YYYY')} - (Test Api)`, { media: { media_ids: [hoursId, artistId, musicsId] } });
-            console.log("Tweet Posted")
-        } catch (err) {
-            throw new Error(err);
-        }
+        const [artistId, hoursId, musicsId] = await Promise.all([
+            await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-artists.png`)),
+            await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`)),
+            await twitter.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`))
+        ]);
+        await twitter.v2.tweet(`Summary of last week's songs - ${moment().format('DD/MM/YYYY')} - (Test Api)`, { media: { media_ids: [hoursId, artistId, musicsId] } });
     }
 }
 

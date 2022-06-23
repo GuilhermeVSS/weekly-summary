@@ -2,8 +2,6 @@ require('dotenv').config();
 const spotify = require('../../services/spotify.svr');
 const querystring = require("querystring");
 const axios = require('axios');
-const fs = require('fs');
-const twitterController = require('./twitter.controller');
 const { Day } = require('../models/day.model');
 const { Cursor } = require('../models/cursor.model');
 
@@ -103,20 +101,16 @@ class SpotifyController {
             }
         }
 
-        try {
-            await this.refreshToken();
-            for (const track of tracks) {
-                if (mapArtists[track.artists[0].id]) {
-                    mapArtists[track.artists[0].id] += 1;
-                    continue;
-                }
-                const artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
-
-                mapArtists[track.artists[0].id] = 1;
-                artists.push(artist.data);
+        await this.refreshToken();
+        for (const track of tracks) {
+            if (mapArtists[track.artists[0].id]) {
+                mapArtists[track.artists[0].id] += 1;
+                continue;
             }
-        } catch (err) {
-            console.log(err);
+            const artist = await spotify.get(`/artists/${track.artists[0].id}`, config);
+
+            mapArtists[track.artists[0].id] = 1;
+            artists.push(artist.data);
         }
 
         return {
@@ -126,81 +120,67 @@ class SpotifyController {
     }
 
     getSongsData = async (tracks) => {
-        try {
+        await this.refreshToken();
+        let ids = tracks.map((track, key) => {
+            return key == tracks.length - 1 ? `${track.track.id}` : `${track.track.id},`
+        }).join('');
 
-            await this.refreshToken();
-
-            let ids = tracks.map((track, key) => {
-                return key == tracks.length - 1 ? `${track.track.id}` : `${track.track.id},`
-            }).join('');
-
-            const config = {
-                headers: {
-                    "Authorization": `Bearer ${this._accessToken}`
-                },
-                params: {
-                    ids: ids
-                }
+        const config = {
+            headers: {
+                "Authorization": `Bearer ${this._accessToken}`
+            },
+            params: {
+                ids: ids
             }
-
-            const result = await spotify.get('/tracks', config);
-
-            const musics = result.data.tracks;
-
-            return musics;
-
-        } catch (err) {
-            throw new Error(err);
         }
+
+        const result = await spotify.get('/tracks', config);
+
+        const musics = result.data.tracks;
+
+        return musics;
     }
 
     getLastSongs = async () => {
         const limit = 50;
-        try {
-
-            await this.refreshToken();
-
-            const [foundCursor] = await Cursor.find();
-
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${this._accessToken}`
-                },
-                params: {
-                    limit: limit,
-                    after: foundCursor ? foundCursor.after : null,
-                }
+        await this.refreshToken();
+        const [foundCursor] = await Cursor.find();
+        const config = {
+            headers: {
+                Authorization: `Bearer ${this._accessToken}`
+            },
+            params: {
+                limit: limit,
+                after: foundCursor ? foundCursor.after : null,
             }
-
-            const result = await spotify.get('/me/player/recently-played', config);
-
-            const afterCursor = result.data.cursors? result.data.cursors.after: null;
-
-            if (!foundCursor) {
-                const newCursor = new Cursor({ after: afterCursor });
-                await newCursor.save();
-            }
-            else if (afterCursor) {
-                await foundCursor.update({ $set: { after: afterCursor } });
-            }
-
-            const tracks = result.data.items;
-            return tracks;
-        } catch (err) {
-            throw new Error(err);
         }
+
+        const result = await spotify.get('/me/player/recently-played', config);
+
+        const afterCursor = result.data.cursors ? result.data.cursors.after : null;
+
+        const tracks = result.data.items;
+        return [tracks, afterCursor, foundCursor];
     }
 
-    initProcess = async () => {
+    initProcess = async (req, res) => {
         try {
-            const tracksData = await this.getLastSongs();
+            const [tracksData, nextCursor, cursor] = await this.getLastSongs();
             const songsData = await this.getSongsData(tracksData);
             const artistsData = await this.getArtists(songsData);
             const { artists, songs, timeListened } = await trackLogic.initProcess(songsData, artistsData);
             const newDaySummary = new Day({ artists, songs, timeListened });
             await newDaySummary.save();
+            if (!cursor) {
+                const newCursor = new Cursor({ after: nextCursor });
+                await newCursor.save();
+            }
+            else if (nextCursor) {
+                await cursor.update({ $set: { after: nextCursor } });
+            }
+            return res ? res.json({ message: "Spotify Info retrieved successfuly" }) : { message: "Successful" }
         } catch (err) {
-            throw new Error(err);
+            return res ? res.status(500).json({ message: "Somethin Went Wrong" }) : { message: "Something Went Wrong" }
         }
     }
 }

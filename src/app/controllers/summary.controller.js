@@ -35,9 +35,8 @@ class SummaryController {
 
             return res? res.json({message: "Successful"}): {};
         }catch(err){
-            console.log(err);
+            return res? res.json({message: "Failed"}): {};
         }
-        return res? res.json({message: "Failed"}): {};
     }
 }
 
