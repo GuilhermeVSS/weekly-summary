@@ -1,8 +1,6 @@
 require('dotenv').config();
 
 const { twitter } = require('../../services/twitter.svr');
-const trackLogic = require('../logic/track.logic');
-const headerHelper = require('../helpers/header.helper');
 const path = require('path');
 const moment = require('moment');
 

@@ -7,6 +7,8 @@ const twitter = require('./twitter.controller');
 const fs = require(`fs`);
 const path = require('path');
 
+const telegramSendMessage = require('../../services/telegram.svr');
+
 class SummaryController {
     buildSummary = async(req, res)=>{
         try{
@@ -32,9 +34,11 @@ class SummaryController {
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`));
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`));
             fs.unlinkSync(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-artists.png`));
-
+            await telegramSendMessage("Summary successfully completed");
             return res? res.json({message: "Successful"}): {};
         }catch(err){
+            const error = JSON.stringify(err.message);
+            telegramSendMessage(`Error on build summary: ${error}`);
             return res? res.json({message: "Failed"}): {};
         }
     }

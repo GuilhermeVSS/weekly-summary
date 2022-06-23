@@ -18,6 +18,7 @@
     "node-cron": "^3.0.1",
     "oauth-1.0a": "^2.2.6",
     "request": "^2.88.2",
+    "telegraf": "^4.8.5",
     "twitter-api-v2": "^1.12.2"
   },
   "devDependencies": {

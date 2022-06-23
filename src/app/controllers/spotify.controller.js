@@ -6,6 +6,7 @@ const { Day } = require('../models/day.model');
 const { Cursor } = require('../models/cursor.model');
 
 const trackLogic = require('../logic/track.logic');
+const telegramSendMessage = require('../../services/telegram.svr');
 class SpotifyController {
 
     constructor() {
@@ -169,7 +170,7 @@ class SpotifyController {
             const songsData = await this.getSongsData(tracksData);
             const artistsData = await this.getArtists(songsData);
             const { artists, songs, timeListened } = await trackLogic.initProcess(songsData, artistsData);
-            const newDaySummary = new Day({ artists, songs, timeListened });
+            const newDaySummary = new Day({ artists, songs, timeListened});
             await newDaySummary.save();
             if (!cursor) {
                 const newCursor = new Cursor({ after: nextCursor });
@@ -178,8 +179,11 @@ class SpotifyController {
             else if (nextCursor) {
                 await cursor.update({ $set: { after: nextCursor } });
             }
+            await telegramSendMessage("Songs collected successfully");
             return res ? res.json({ message: "Spotify Info retrieved successfuly" }) : { message: "Successful" }
         } catch (err) {
+            const error = JSON.stringify(err.message);
+            telegramSendMessage(`Error on retrieve songs ${error}`);
             return res ? res.status(500).json({ message: "Somethin Went Wrong" }) : { message: "Something Went Wrong" }
         }
     }
