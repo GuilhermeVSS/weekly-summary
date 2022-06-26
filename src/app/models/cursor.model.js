@@ -3,7 +3,10 @@ const { Schema } = mongoose;
 
 //Model Colleciton setup
 const cursorSchema = new Schema(
-    { after: String },
+    {
+        after: String,
+        user_id: Schema.Types.ObjectId
+    },
     { timestamps: true }
 );
 

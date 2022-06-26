@@ -11,7 +11,7 @@ class SpotifyController {
 
     constructor() {
         this._accessToken = process.env.SPOTIFY_ACCESS_TOKEN;
-        this._refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+        this._refreshToken = process.env.SPOTIFY_REFRESH_TOKEN; 
         return this;
     }
 

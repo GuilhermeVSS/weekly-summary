@@ -3,7 +3,7 @@ const summaryController = require('../app/controllers/summary.controller');
 const cron = require('node-cron');
 
 const buildWeekSummary= () => {
-    cron.schedule('59 23 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+    cron.schedule('2 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
         try {
             await summaryController.buildSummary();
         } catch(e) {

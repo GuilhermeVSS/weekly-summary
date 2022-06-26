@@ -4,7 +4,8 @@ const { Router } = require("express");
 const routes = new Router();
 
 const spotifyController = require('./app/controllers/spotify.controller');
-const summaryController = require('./app/controllers/summary.controller');
+//const summaryController = require('./app/controllers/summary.controller');
+//const userController = require('./app/controllers/user.controller');
 
 routes.get('/authorization', spotifyController.getAuthorization);
 
@@ -14,11 +15,14 @@ routes.get('/', async(req,res)=>{
     return res.send("Welcome to my week summary builder - by : Guilherme Ventura Santos Silva [gvss]");
 })
 
-routes.get('/confirmation', spotifyController.confirmation);
+//routes.get('/confirmation', spotifyController.confirmation);
 
-routes.post('/build', summaryController.buildSummary);
+//routes.post('/build', summaryController.buildSummary);
 
-routes.post('/get-info', spotifyController.initProcess);
+//routes.post('/get-info', spotifyController.initProcess);
+
+//routes.post('/user/create', userController.store);
+//routes.post('/user/credentials', userController.insertCredentials);
 
 
 module.exports = routes;
