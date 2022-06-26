@@ -21,7 +21,7 @@ class TwitterController {
             await this.client.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-hours-and-genres.png`)),
             await this.client.v1.uploadMedia(path.resolve(__dirname, '..', '..', '..', 'tmp', `${imageId}-top-musics.png`))
         ]);
-        await this.client.v2.tweet(`Summary of last week's songs - ${moment().format('DD/MM/YYYY')} - WeekSummary\nMade by: @gventura_ss`, { media: { media_ids: [hoursId, artistId, musicsId] } });
+        await this.client.v2.tweet(`Summary of last week's songs - WeekSummary\n\n____\nMade by: @gventura_ss`, { media: { media_ids: [hoursId, artistId, musicsId] } });
     }
 }
 
