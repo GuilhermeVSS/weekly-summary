@@ -6,6 +6,7 @@ const { Day } = require('../../../src/app/models/day.model');
 const { Cursor } = require('../../../src/app/models/cursor.model');
 
 const trackLogic = require('../logic/track.logic');
+const Log = require(`../log`);
 
 class SpotifyController {
 
@@ -93,13 +94,44 @@ class SpotifyController {
     }
 
     initProcess = async (credential) => {
+        await Log.start(`Get-Spotify-Info`, credential._id);
         try {
             const [tracksData, nextCursor, cursor] = await this.getLastSongs(credential);
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Get last songs",
+                data: {}
+            });
             const songsData = await this.getSongsData(credential, tracksData);
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Get songs information",
+                data: {}
+            });
             const artistsData = await this.getArtists(credential, songsData);
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Get artists information",
+                data: {}
+            });
             const { artists, songs, timeListened } = await trackLogic.initProcess(songsData, artistsData);
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Data transformation to mongo",
+                data: {}
+            });
             const newDaySummary = new Day({ artists, songs, timeListened, user_id: credential._id });
             await newDaySummary.save();
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Saved on mongo",
+                data: {}
+            });
             if (!cursor) {
                 const newCursor = new Cursor({ after: nextCursor, user_id: credential._id });
                 await newCursor.save();
@@ -107,9 +139,22 @@ class SpotifyController {
             else if (nextCursor) {
                 await cursor.update({ $set: { after: nextCursor } });
             }
+            await Log.trace(`Get-Spotify-Info`, {
+                key: credential._id,
+                status: "Success",
+                name: "Update/create cursor",
+                data: {}
+            });
+            await Log.end('Get-Spotify-Info', credential._id);
             return { message: "Successful" }
         } catch (err) {
-            console.log("Err:", err.message);
+            await Log.trace('Get-Spotify-Info', {
+                key: credential._id,
+                status: 'Error',
+                name: "Error on collect Information",
+                data: {message: err.message}
+            })
+            await Log.end('Get-Spotify-Info', credential._id);
             return { message: "Something Went Wrong" }
         }
     }
