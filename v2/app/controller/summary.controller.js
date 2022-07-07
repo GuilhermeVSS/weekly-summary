@@ -1,6 +1,7 @@
 const { Day } = require('../../../src/app/models/day.model');
 const moment = require('moment');
 const aggregateHelper = require('../helpers/aggregation.helper');
+const { ObjectId } = require('mongodb');
 
 const imageBuilder = require('../logic/image-builder.logic');
 const Twitter = require('./twitter.controller');
@@ -12,14 +13,16 @@ class SummaryController {
     buildSummary = async (credential) => {
         await Log.start(`Build-Summary`, credential._id);
         try {
-            const begin = moment().subtract(7, 'd').format('DD-MM-YYYY');
-            const end = moment().format('DD-MM-YYYY');
+            let begin = new Date(moment().subtract(7,'days').format('YYYY/MMM/DD'))
+            const end = new Date(moment().format('YYYY/MM/DD'));
+
             const [[timeListened], mostArtistsListened, mostGenresListened, mostSongsListened] = await Promise.all([
-                Day.aggregate(aggregateHelper.getHoursListened(credential._id, begin, end)),
-                Day.aggregate(aggregateHelper.getMostArtistsListened(credential._id, begin, end)),
-                Day.aggregate(aggregateHelper.getMostGenresListened(credential._id, begin, end)),
-                Day.aggregate(aggregateHelper.getMostSongsListened(credential._id, begin, end))
+                await Day.aggregate(aggregateHelper.getHoursListened(credential._id, begin, end)),
+                await Day.aggregate(aggregateHelper.getMostArtistsListened(credential._id, begin, end)),
+                await Day.aggregate(aggregateHelper.getMostGenresListened(credential._id, begin, end)),
+                await Day.aggregate(aggregateHelper.getMostSongsListened(credential._id, begin, end))
             ])
+
             await Log.trace(`Build-Summary`, {
                 key: credential._id,
                 status: "Success",

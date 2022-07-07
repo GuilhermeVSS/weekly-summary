@@ -1,6 +1,7 @@
 const userController = require('./user.controller');
 const spotifyController = require('./spotify.controller');
 const summaryController = require('./summary.controller');
+const dayController = require('./day.controller');
 
 class OrchestratorController {
     initColectInformation = async () => {
@@ -28,6 +29,14 @@ class OrchestratorController {
             return {message: "Successful"}
         } catch (err) {
             throw new Error(err);
+        }
+    }
+
+    initCleanDatabase = async() => {
+        try {
+            await dayController.cleanDatabase();
+        } catch (error) {
+            throw new Error(error);
         }
     }
 }

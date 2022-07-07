@@ -3,7 +3,7 @@ const orchestratorController = require('../app/controller/orchestrator.controlle
 const cron = require('node-cron');
 
 const buildWeekSummaryV2 = () => {
-    cron.schedule('0 1 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+    cron.schedule('1 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
         try {
             await orchestratorController.initBuildSummary();
             return;
@@ -32,7 +32,20 @@ const getSpotifyInfoV2 = () => {
     })
 }
 
+const cleanDatabase = () => {
+    cron.schedule('1 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+        try {
+            await orchestratorController.initCleanDatabase();
+        } catch(e) {
+            console.log(e);
+        }
+    },{
+        scheduled: true,
+        timezone: "America/Sao_Paulo"
+    })
+}
 module.exports = {
     buildWeekSummaryV2,
     getSpotifyInfoV2,
+    cleanDatabase
 }

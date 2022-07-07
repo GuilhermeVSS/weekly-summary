@@ -8,7 +8,7 @@ const daySchema = new Schema({
     artists: {type: []},
     timeListened: {type: Number},
     user_id: {type: Schema.Types.ObjectId},
-    createdAt: { type: String, default: moment(Date.now()).format('DD-MM-YYYY')}
+    createdAt: { type: Date, default: Date.now()}
 });
 
 const Day = mongoose.model('day', daySchema);

@@ -2,9 +2,11 @@ require('dotenv').config();
 const app = require('./app');
 const PORT = process.env.PORT || 3333;
 
-const { getSpotifyInfoV2, buildWeekSummaryV2 } = require('../v2/services/cron.svr');
+const { getSpotifyInfoV2, buildWeekSummaryV2, cleanDatabase } = require('../v2/services/cron.svr');
+
 getSpotifyInfoV2();
 buildWeekSummaryV2();
+cleanDatabase();
 
 // const {
 //     buildWeekSummary,
