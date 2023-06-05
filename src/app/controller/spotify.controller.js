@@ -1,9 +1,9 @@
 require('dotenv').config();
-const spotify = require('../../../src/services/spotify.svr');
+const spotify = require('../../services/spotify.svr');
 const querystring = require("querystring");
 const axios = require('axios');
-const { Day } = require('../../../src/app/models/day.model');
-const { Cursor } = require('../../../src/app/models/cursor.model');
+const { Day } = require('../models/day.model');
+const { Cursor } = require('../models/cursor.model');
 
 const trackLogic = require('../logic/track.logic');
 const Log = require(`../log`);

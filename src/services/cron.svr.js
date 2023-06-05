@@ -1,13 +1,12 @@
-const spotifyController = require('../app/controllers/spotify.controller');
-const summaryController = require('../app/controllers/summary.controller');
+const orchestratorController = require('../app/controller/orchestrator.controller');
+
 const cron = require('node-cron');
 
-const buildWeekSummary= () => {
-    cron.schedule('2 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+const buildWeekSummaryV2 = () => {
+    cron.schedule('1 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
         try {
-            await summaryController.buildSummary();
+            await orchestratorController.initBuildSummary();
         } catch(e) {
-            console.log(err);
         }
     }, {
         scheduled: true,
@@ -15,12 +14,11 @@ const buildWeekSummary= () => {
     })
 }
 
-const getSpotifyInfo = () => {
+const getSpotifyInfoV2 = () => {
     cron.schedule('0 59 23 * * *', async () => {
         try {
-            await spotifyController.initProcess();
+            await orchestratorController.initColectInformation();
         } catch(e) {
-
         }
     }, {
         scheduled: true,
@@ -28,7 +26,19 @@ const getSpotifyInfo = () => {
     })
 }
 
+const cleanDatabase = () => {
+    cron.schedule('1 0 * Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec Sun', async () => {
+        try {
+            await orchestratorController.initCleanDatabase();
+        } catch(e) {
+        }
+    },{
+        scheduled: true,
+        timezone: "America/Sao_Paulo"
+    })
+}
 module.exports = {
-    buildWeekSummary,
-    getSpotifyInfo,
+    buildWeekSummaryV2,
+    getSpotifyInfoV2,
+    cleanDatabase
 }

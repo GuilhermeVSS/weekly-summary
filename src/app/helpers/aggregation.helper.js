@@ -1,9 +1,61 @@
-
+const {ObjectID} = require('mongoose');
 class AggregationHelper {
-    getHoursListened(begin, end) {
+    getUsersSpotifyCredential() {
         return [
             {
-                $match: { "createdAt": { $gte: begin, $lte: end } }
+                $match: {
+                    "spotify_access_token": {
+                        $ne: null
+                    },
+                    "spotify_refresh_token": {
+                        $ne: null
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    spotify_access_token: 1,
+                    spotify_refresh_token: 1
+                }
+            }
+        ]
+    }
+
+    getUsersTwitterCredentials() {
+        return [
+            {
+                $match: {
+                    "access_secret_twitter": {
+                        $ne: null
+                    },
+                    "access_token_twitter": {
+                        $ne: null
+                    },
+                    "consumer_key_twitter": {
+                        $ne: null
+                    },
+                    "consumer_secret_twitter": {
+                        $ne: null
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    access_secret_twitter: 1,
+                    access_token_twitter: 1,
+                    consumer_key_twitter: 1,
+                    consumer_secret_twitter: 1
+                }
+            }
+        ]
+    }
+
+    getHoursListened(userId, begin, end) {
+        return [
+            {
+                $match: { "createdAt": { $gte: begin, $lte: end }, "user_id": userId }
             },
             {
                 $group: {
@@ -16,10 +68,10 @@ class AggregationHelper {
         ]
     }
 
-    getMostGenresListened(begin, end) {
+    getMostGenresListened(userId, begin, end) {
         return [
             {
-                $match: { "createdAt": { $gte: begin, $lte: end } }
+                $match: { "createdAt": { $gte: begin, $lte: end }, "user_id": userId }
             },
             {
                 $project: {
@@ -46,14 +98,14 @@ class AggregationHelper {
                     "frequency": -1
                 }
             },
-            { $limit : 5 }
+            { $limit: 5 }
         ]
     }
 
-    getMostSongsListened(begin, end) {
+    getMostSongsListened(userId, begin, end) {
         return [
             {
-                $match: { "createdAt": { $gte: begin, $lte: end } }
+                $match: { "createdAt": { $gte: begin, $lte: end }, "user_id": userId }
             },
             {
                 $project: {
@@ -67,21 +119,21 @@ class AggregationHelper {
             {
                 $group: {
                     _id: "$songs.name",
-                    album:{$addToSet: "$songs.album"},
+                    album: { $addToSet: "$songs.album" },
                     frequency: {
                         $sum: 1
                     }
                 }
             },
             { $sort: { "frequency": -1 } },
-            { $limit : 5 }
+            { $limit: 5 }
         ]
     }
 
-    getMostArtistsListened(begin, end) {
+    getMostArtistsListened(userId, begin, end) {
         return [
             {
-                $match: { "createdAt": { $gte: begin, $lte: end } }
+                $match: { "createdAt": { $gte: begin, $lte: end }, "user_id": userId }
             },
             {
                 $project: {
@@ -113,10 +165,9 @@ class AggregationHelper {
                     frequency: -1
                 }
             },
-            { $limit : 5 }
+            { $limit: 5 }
         ]
     }
-
 }
 
 module.exports = new AggregationHelper();

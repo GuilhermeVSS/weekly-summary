@@ -1,4 +1,4 @@
-const {User} = require('../../../src/app/models/user.model');
+const {User} = require('../models/user.model');
 const aggregateHelper = require('../helpers/aggregation.helper');
 
 class UserController {

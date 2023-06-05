@@ -1,4 +1,4 @@
-const { Day } = require('../../../src/app/models/day.model');
+const { Day } = require('../models/day.model');
 const moment = require('moment');
 const aggregateHelper = require('../helpers/aggregation.helper');
 const { ObjectId } = require('mongodb');
