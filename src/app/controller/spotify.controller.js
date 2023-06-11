@@ -10,6 +10,7 @@ const Log = require(`../log`);
 
 class SpotifyController {
 
+    
     refreshToken = async (credential) => {
         const { data: result } = await axios.post("https://accounts.spotify.com/api/token", querystring.stringify({
             "grant_type": "refresh_token",

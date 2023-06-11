@@ -12,7 +12,6 @@ class OrchestratorController {
                     spotifyController.initProcess(credential);
                 })
             )
-            return {message: "Successful"}
         } catch (err) {
             throw new Error(err);
         }
