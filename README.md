@@ -41,11 +41,11 @@ The application has four routes, all of the GET type:
 
 ## Examples
 * Most Listened songs
-     ![plot](./FfuPIe8WQAAlcdO.png)
+     ![plot](./images/FfuPIe8WQAAlcdO.png)
 * Most Listened Artists
-     ![plot](./FfuPIJwX0AEMKTs.png)
+     ![plot](./images/FfuPIJwX0AEMKTs.png)
 * Most Listened Genres and Total of Listened Hours
-     ![plot](./FfuPIUgXEAALeSR.png)
+     ![plot](./images/FfuPIUgXEAALeSR.png)
 ## References
 * Dependencies
     * [Axios](https://www.npmjs.com/package/axios)
