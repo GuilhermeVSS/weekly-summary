@@ -29,7 +29,7 @@ CHAT_ID=<Telegram chat id>
 With these environment variables configured we can run our application.
 
 
-## running
+## Running
 For the execution, some scripts were created inside the application
 - dev: Run the command ```yarn dev``` or ```npm run dev``` to run the application with nodemon for development, it will reload the application whenever a new change is saved
 
@@ -38,6 +38,18 @@ The application has four routes, all of the GET type:
 - ```POST``` ```/user```: route responsible for user registration.
 - ```POST``` ```/user/credentials```: route responsible for registering the user's spotify and twitter credentials
 - ```POST``` ```/login``` : route responsible for user authentication and login
+
+If you take a look at user's model you will see what information do you need to colect from user.
+
+```user
+spotify_access_token,
+spotify_refresh_token,
+consumer_key_twitter,
+consumer_secret_twitter,
+access_token_twitter,
+access_secret_twitter,
+```
+these are the information that the ```POST``` ```/user/credentials``` expects to receive.
 
 ## Examples
 * Most Listened songs
